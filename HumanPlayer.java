@@ -4,7 +4,6 @@ public class HumanPlayer extends Player {
 
     public HumanPlayer(String playerName, int row, int col, Color color) {
         super(playerName, row, col, color);
-        // TODO Auto-generated constructor stub
     }
 
     public void move(int rowOffset, int colOffset) {

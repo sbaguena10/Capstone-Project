@@ -7,6 +7,7 @@ public class Player {
     private int row;
     private int col;
     private boolean isDead;
+    private int[][] intialPos;
     private Color color; // Unique color for the player
 
     // Constructor
