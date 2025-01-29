@@ -8,9 +8,8 @@ public class Player {
     private int col;
     private boolean isDead;
     private int[][] intialPos;
-    private Color color; // Unique color for the player
+    private Color color; // color for the player
 
-    // Constructor
     public Player(String playerName, int row, int col, Color color) {
         this.playerName = playerName;
         this.row = row;

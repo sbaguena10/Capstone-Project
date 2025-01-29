@@ -4,15 +4,17 @@ public class HumanPlayer extends Player {
 
     public HumanPlayer(String playerName, int row, int col, Color color) {
         super(playerName, row, col, color);
+        // TODO Auto-generated constructor stub
     }
 
-    public void move(int rowOffset, int colOffset) {
-        int distance = Math.abs(rowOffset) + Math.abs(colOffset);
-        if (distance <= 3) {
-            setRow(getRow() + rowOffset);
-            setCol(getCol() + colOffset);
+    public void Humanmove(int rowChange, int colChange) {
+        // Validate move range and direction
+        if ((Math.abs(rowChange) <= 3 && colChange == 0) ||
+                (Math.abs(colChange) <= 3 && rowChange == 0)) {
+            setRow(getRow() + rowChange); // Update row position
+            setCol(getCol() + colChange); // Update column position
         } else {
-            System.out.println("Move too far. Max range is 3 cells.");
+            System.out.println("Movement not allowed");
         }
     }
 }

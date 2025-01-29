@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class Board extends JPanel implements MouseMotionListener {
 
-    private static final int CELL_SIZE = 50; // Size of each square cell
+    private static final int CELL_SIZE = 50; // Size of the cell
     private static final int ROWS = 6; // Number of rows in the main board
     private static final int COLS = 14; // Number of columns in both grids
     private static final int SEPARATION_GAP = 20; // Gap between the top grid and main grid
@@ -23,7 +23,6 @@ public class Board extends JPanel implements MouseMotionListener {
     private int hoverCol = -1; // Hovered column
     private Color hoverColor = new Color(255, 255, 0, 100); // Semi-transparent yellow for hover
 
-    // New fields for movement
     private int selectedRow = -1;
     private int selectedCol = -1;
     private List<Point> validMoves = new ArrayList<>();
@@ -75,16 +74,6 @@ public class Board extends JPanel implements MouseMotionListener {
         players.add(new IAplayer("AI Player 3", 0, COLS - 1, Color.YELLOW)); // Top-right corner
     }
 
-    private HumanPlayer findHumanPlayer() {
-        for (int i = 0; i < players.size(); i++) {
-            Player player = players.get(i);
-            if (player instanceof HumanPlayer) {
-                return (HumanPlayer) player;
-            }
-        }
-        return null;
-    }
-
     /**
      * Sets up key bindings for the board.
      */
@@ -104,18 +93,27 @@ public class Board extends JPanel implements MouseMotionListener {
         });
     }
 
+    /**
+     * method to invoque the method to move the ia players. It checks if the player
+     * is AI, and then if it is moves it
+     */
     private void moveAIPlayers() {
         for (Player player : players) {
             if (player instanceof IAplayer) {
                 IAplayer aiPlayer = (IAplayer) player;
-                aiPlayer.IAmove(); // Trigger AI move
+                aiPlayer.IAmove(); // AI move
             }
         }
     }
 
+    /**
+     * method to move the human player, it checks if the movement is valid after the
+     * selection
+     * and updates the players position and the row
+     */
     private void moveHumanPlayer() {
         if (selectedRow != -1 && selectedCol != -1) {
-            HumanPlayer humanPlayer = findHumanPlayer();
+            HumanPlayer humanPlayer = (HumanPlayer) players.getFirst();
             if (humanPlayer != null) {
                 // Calculate row and column change from current position
                 int rowOffset = selectedRow - humanPlayer.getRow();
@@ -126,7 +124,7 @@ public class Board extends JPanel implements MouseMotionListener {
                 // occupied
                 if (distance <= 3 && !isOccupied(selectedRow, selectedCol)) {
                     // Move the human player using the calculated offset
-                    humanPlayer.move(rowOffset, colOffset);
+                    humanPlayer.Humanmove(rowOffset, colOffset);
 
                     // After the move, reset selectedRow and selectedCol to prevent reuse for
                     // invalid moves
@@ -140,6 +138,14 @@ public class Board extends JPanel implements MouseMotionListener {
         }
     }
 
+    /**
+     * this method checks if the cell that the player is moving is occupied or not.
+     * Will need change of the logic later on
+     * 
+     * @param row
+     * @param col
+     * @return
+     */
     private boolean isOccupied(int row, int col) {
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
@@ -150,6 +156,10 @@ public class Board extends JPanel implements MouseMotionListener {
         return false; // No player occupies this cell
     }
 
+    /**
+     * method to handle mouse clicks, checks if the cell of the desired movement is
+     * a valid one or not.
+     */
     private void handleMouseClick(MouseEvent e) {
         int boardWidth = COLS * CELL_SIZE;
         int boardHeight = (ROWS + 1) * CELL_SIZE + SEPARATION_GAP;
@@ -162,7 +172,7 @@ public class Board extends JPanel implements MouseMotionListener {
         int clickedCol = mouseX / CELL_SIZE;
 
         if (clickedRow >= 0 && clickedRow < ROWS && clickedCol >= 0 && clickedCol < COLS) {
-            HumanPlayer humanPlayer = findHumanPlayer();
+            HumanPlayer humanPlayer = (HumanPlayer) players.getFirst();
             if (humanPlayer != null) {
                 int rowOffset = clickedRow - humanPlayer.getRow();
                 int colOffset = clickedCol - humanPlayer.getCol();
@@ -177,9 +187,95 @@ public class Board extends JPanel implements MouseMotionListener {
         }
     }
 
-    /**
-     * Paints the board, including the top grid, main grid, and player positions.
-     */
+    private void drawPlayerInfo(Graphics g, int panelWidth, int panelHeight) {
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics metrics = g.getFontMetrics();
+        int indicatorSize = 25; // Size of the colored circle
+        int padding = 20; // Padding from the edges
+        int healthBarWidth = 90; // Width of the health bar
+        int healthBarHeight = 15; // Height of the health bar
+
+        int offset = 15; // Space between circle and text
+
+        // Positions of players in the four corners
+        int[][] playerPositions = {
+                { 0, 0 }, // Top-left
+                { 3, 3 }, // Top-right
+                { 3, 0 }, // Bottom-left
+                { 0, 3 } // Bottom-right
+        };
+
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            int health = player.getTotalHealth();
+            String name = player.getPlayerName();
+
+            int row = playerPositions[i][0];
+            int col = playerPositions[i][1];
+
+            // Calculate circle position based on the row and column
+            int circleX = padding;
+            int circleY = padding;
+            int textX = circleX + indicatorSize + offset;
+            int textY = circleY + indicatorSize - 2;
+            int healthX = textX;
+            int healthY = textY + 10;
+
+            if (row == 0 && col == 3) { // Top-right
+                circleX = panelWidth - padding - indicatorSize;
+                textX = circleX - metrics.stringWidth(name) - offset;
+                healthX = textX;
+            } else if (row == 3 && col == 0) { // Bottom-left
+                circleY = panelHeight - padding - indicatorSize;
+                textY = circleY + indicatorSize - 2;
+                healthY = textY + 10;
+            } else if (row == 3 && col == 3) { // Bottom-right
+                circleX = panelWidth - padding - indicatorSize;
+                circleY = panelHeight - padding - indicatorSize;
+                textX = circleX - metrics.stringWidth(name) - offset;
+                textY = circleY + indicatorSize - 2;
+                healthX = textX;
+                healthY = textY + 10;
+            }
+
+            // Draw the player's color circle
+            g.setColor(player.getColor());
+            g.fillOval(circleX, circleY, indicatorSize, indicatorSize);
+
+            // Draw the player's name
+            g.setColor(Color.BLACK);
+            g.drawString(name, textX, textY);
+
+            // Draw the health bar background
+            g.setColor(Color.GRAY);
+            g.fillRect(healthX, healthY, healthBarWidth, healthBarHeight);
+
+            // Draw the health bar (colored based on health value)
+            g.setColor(getHealthColor(health));
+            int currentHealthWidth = (int) ((health / 100.0) * healthBarWidth);
+            g.fillRect(healthX, healthY, currentHealthWidth, healthBarHeight);
+
+            // Draw the border for the health bar
+            g.setColor(Color.BLACK);
+            g.drawRect(healthX, healthY, healthBarWidth, healthBarHeight);
+
+            // Draw the health percentage text
+            String healthText = health + "%";
+            g.setColor(Color.BLACK);
+            g.drawString(healthText, healthX + healthBarWidth + 10, healthY + healthBarHeight / 2 + 5);
+        }
+    }
+
+    private Color getHealthColor(int health) {
+        if (health > 70) {
+            return Color.GREEN;
+        } else if (health > 30) {
+            return Color.YELLOW;
+        } else {
+            return Color.RED;
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -194,10 +290,11 @@ public class Board extends JPanel implements MouseMotionListener {
         drawMainGrid(g, xOffset, yOffset + CELL_SIZE + SEPARATION_GAP);
         drawPlayers(g, xOffset, yOffset + CELL_SIZE + SEPARATION_GAP);
         drawHoverHighlight(g, xOffset, yOffset);
+        drawPlayerInfo(g, getWidth(), getHeight());
 
         // Draw selected cell highlight
         if (selectedRow != -1 && selectedCol != -1) {
-            g.setColor(new Color(0, 255, 0, 100)); // Semi-transparent green
+            g.setColor(new Color(0, 255, 0, 100));
             int x = xOffset + selectedCol * CELL_SIZE;
             int y = yOffset + (CELL_SIZE + SEPARATION_GAP) + selectedRow * CELL_SIZE;
             g.fillRect(x, y, CELL_SIZE, CELL_SIZE);
@@ -217,7 +314,7 @@ public class Board extends JPanel implements MouseMotionListener {
         if (hoverRow == -1) {
             y = yOffset; // Top grid
         } else {
-            y = yOffset + (CELL_SIZE + SEPARATION_GAP) + hoverRow * CELL_SIZE; // Main grid
+            y = yOffset + (CELL_SIZE + SEPARATION_GAP) + hoverRow * CELL_SIZE;
         }
 
         g.setColor(hoverColor);
