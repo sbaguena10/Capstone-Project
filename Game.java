@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -11,13 +12,14 @@ public class Game {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
 
+        // Main panel with a gradient background
         JPanel mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
-                Color color1 = new Color(70, 130, 180);
-                Color color2 = new Color(135, 206, 235);
+                Color color1 = new Color(70, 130, 180); // Steel Blue
+                Color color2 = new Color(135, 206, 235); // Sky Blue
                 GradientPaint gp = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
                 g2d.setPaint(gp);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
@@ -25,19 +27,19 @@ public class Game {
         };
         mainPanel.setLayout(new GridBagLayout());
 
-        // content panel
+        // Content panel
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
-        // title
+        // Title
         JLabel gameTitle = new JLabel("Welcome to the Countdown");
         gameTitle.setFont(new Font("Arial", Font.BOLD, 32));
         gameTitle.setForeground(Color.WHITE);
         gameTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // start button
+        // Start button
         JButton startButton = new JButton("Start Game");
         startButton.setFont(new Font("Arial", Font.BOLD, 16));
         startButton.setForeground(new Color(50, 50, 50));
@@ -49,7 +51,7 @@ public class Game {
                 BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
                 BorderFactory.createEmptyBorder(10, 20, 10, 20)));
 
-        // hover effect to button
+        // Hover effect for the start button
         startButton.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 startButton.setBackground(new Color(230, 230, 230));
@@ -60,7 +62,7 @@ public class Game {
             }
         });
 
-        // action listener to start button
+        // Start button action listener
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -68,18 +70,65 @@ public class Game {
             }
         });
 
-        // components to content panel
+        // Settings button
+        JButton settingsButton = new JButton("Settings");
+        settingsButton.setFont(new Font("Arial", Font.BOLD, 16));
+        settingsButton.setForeground(new Color(50, 50, 50));
+        settingsButton.setBackground(new Color(255, 255, 255));
+        settingsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        settingsButton.setMaximumSize(new Dimension(200, 50));
+        settingsButton.setFocusPainted(false);
+        settingsButton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)));
+
+        // Hover effect for the settings button
+        settingsButton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                settingsButton.setBackground(new Color(230, 230, 230));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                settingsButton.setBackground(Color.WHITE);
+            }
+        });
+
+        // Settings button action listener (show game instructions)
+        settingsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showSettings();
+            }
+        });
+
+        // Components to content panel
         contentPanel.add(gameTitle);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         contentPanel.add(startButton);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add space between buttons
+        contentPanel.add(settingsButton);
 
-        // content panel to main panel
+        // Content panel to main panel
         mainPanel.add(contentPanel);
 
-        // main panel to frame
         frame.add(mainPanel);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    // Show settings explanation when settings button is clicked
+    private static void showSettings() {
+        // Display game instructions in a dialog box
+        String instructions = "Welcome to the Countdown! Here's how it works:\n\n" +
+                "1. Each player starts with full health.\n" +
+                "2. In each round, players will make a move.\n" +
+                "3. There are power-ups that can be used for health boosts, shields, etc.\n" +
+                "4. Players lose health when they take damage.\n" +
+                "5. The game ends when a player loses all their health.\n\n" +
+                "Adjust settings below:\n\n" +
+                "You can configure the difficulty, game speed, and more!";
+
+        JOptionPane.showMessageDialog(frame, instructions, "How the Game Works", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private static void startGame() {

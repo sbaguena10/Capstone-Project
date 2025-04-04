@@ -2,11 +2,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
- * The Board class represents the board where the game is played.
- * The board consists of a 6x14 main grid and a 1x14 top grid.
+ * The Board class represents the board where the game is played. The board
+ * consists of a 6x14 main grid and a 1x14 top grid.
  */
 public class Board extends JPanel implements MouseMotionListener {
 
@@ -25,7 +32,14 @@ public class Board extends JPanel implements MouseMotionListener {
 
     private int selectedRow = -1;
     private int selectedCol = -1;
-    private List<Point> validMoves = new ArrayList<>();
+
+    private int countdownSeconds;
+    private Timer countdownTimer;
+    private TimerTask countdownTask;
+    private JLabel countdownLabel;
+    private JTextArea LiveGame;
+    private HumanPlayer humanplayer;
+    // private BufferedImage sprite;
 
     /**
      * Constructs a Board object, initializes the grids and the players.
@@ -35,17 +49,38 @@ public class Board extends JPanel implements MouseMotionListener {
         mainGrid = new Cell[ROWS][COLS];
         players = new ArrayList<>();
         initializeGrids();
+        humanplayer = new HumanPlayer("Sergio", 0, 0, Color.RED);
+        players.add(humanplayer);
         initializePlayers();
-        setupKeyBindings();
-        addMouseMotionListener(this);
 
-        // Add mouse listener for clicks
+        countdownSeconds = 7; // Countdown duration
+        countdownTimer = new Timer();
+
+        countdownLabel = new JLabel("Time remaining: " + countdownSeconds + " seconds");
+        countdownLabel.setFont(new Font("Arial", Font.BOLD, 40));
+        countdownLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        this.add(countdownLabel, BorderLayout.NORTH);
+
+        // Initialize game log
+        LiveGame = new JTextArea(10, 40);
+        LiveGame.setEditable(false);
+        LiveGame.setLineWrap(true);
+        LiveGame.setWrapStyleWord(true);
+
+        JScrollPane scrollPane = new JScrollPane(LiveGame);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        this.add(scrollPane, BorderLayout.SOUTH); // Add game log at the bottom
+
+        startCountdownTimer();
+
+        // Mouse listener for clicks
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 handleMouseClick(e);
             }
         });
+
     }
 
     /**
@@ -68,7 +103,8 @@ public class Board extends JPanel implements MouseMotionListener {
      * grid.
      */
     private void initializePlayers() {
-        players.add(new HumanPlayer("Human Player", 0, 0, Color.RED)); // Top-left corner
+        // players.add(new HumanPlayer("Human Player", 0, 0, Color.RED)); // Top-left
+        // corner
         players.add(new IAplayer("AI Player 1", ROWS - 1, COLS - 1, Color.BLUE)); // Bottom-right corner
         players.add(new IAplayer("AI Player 2", ROWS - 1, 0, Color.GREEN)); // Bottom-left corner
         players.add(new IAplayer("AI Player 3", 0, COLS - 1, Color.YELLOW)); // Top-right corner
@@ -77,21 +113,18 @@ public class Board extends JPanel implements MouseMotionListener {
     /**
      * Sets up key bindings for the board.
      */
-    private void setupKeyBindings() {
-        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actionMap = getActionMap();
-
-        // Key binding for both human and AI player movements
-        inputMap.put(KeyStroke.getKeyStroke("A"), "moveAndUpdate");
-        actionMap.put("moveAndUpdate", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                moveHumanPlayer(); // Move the human player
-                moveAIPlayers(); // Move all AI players
-                updateBoard(); // Update the board
-            }
-        });
-    }
+    // private void setupKeyBindings() {
+    // InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+    // ActionMap actionMap = getActionMap();
+    //
+    // // inputMap.put(KeyStroke.getKeyStroke("A"), "startCountdown");
+    // // actionMap.put("startCountdown", new AbstractAction() {
+    // // @Override
+    // // public void actionPerformed(ActionEvent e) {
+    // // startCountdownTimer();
+    // // }
+    // // });
+    // }
 
     /**
      * method to invoque the method to move the ia players. It checks if the player
@@ -108,12 +141,11 @@ public class Board extends JPanel implements MouseMotionListener {
 
     /**
      * method to move the human player, it checks if the movement is valid after the
-     * selection
-     * and updates the players position and the row
+     * selection and updates the players position and the row
      */
     private void moveHumanPlayer() {
         if (selectedRow != -1 && selectedCol != -1) {
-            HumanPlayer humanPlayer = (HumanPlayer) players.getFirst();
+            HumanPlayer humanPlayer = (HumanPlayer) players.get(0); // gets the first player
             if (humanPlayer != null) {
                 // Calculate row and column change from current position
                 int rowOffset = selectedRow - humanPlayer.getRow();
@@ -198,8 +230,7 @@ public class Board extends JPanel implements MouseMotionListener {
         int offset = 15; // Space between circle and text
 
         // Positions of players in the four corners
-        int[][] playerPositions = {
-                { 0, 0 }, // Top-left
+        int[][] playerPositions = { { 0, 0 }, // Top-left
                 { 3, 3 }, // Top-right
                 { 3, 0 }, // Bottom-left
                 { 0, 3 } // Bottom-right
@@ -292,17 +323,18 @@ public class Board extends JPanel implements MouseMotionListener {
         drawHoverHighlight(g, xOffset, yOffset);
         drawPlayerInfo(g, getWidth(), getHeight());
 
-        // Draw selected cell highlight
+        // cell highlight
         if (selectedRow != -1 && selectedCol != -1) {
             g.setColor(new Color(0, 255, 0, 100));
             int x = xOffset + selectedCol * CELL_SIZE;
             int y = yOffset + (CELL_SIZE + SEPARATION_GAP) + selectedRow * CELL_SIZE;
             g.fillRect(x, y, CELL_SIZE, CELL_SIZE);
         }
+
     }
 
     /**
-     * Draws the hover highlight if the mouse is over a valid cell.
+     * Highlight if the mouse is over a valid cell.
      */
     private void drawHoverHighlight(Graphics g, int xOffset, int yOffset) {
         if (hoverCol == -1)
@@ -312,7 +344,7 @@ public class Board extends JPanel implements MouseMotionListener {
         int y;
 
         if (hoverRow == -1) {
-            y = yOffset; // Top grid
+            y = yOffset;
         } else {
             y = yOffset + (CELL_SIZE + SEPARATION_GAP) + hoverRow * CELL_SIZE;
         }
@@ -322,15 +354,16 @@ public class Board extends JPanel implements MouseMotionListener {
     }
 
     /**
-     * Draws the players.
+     * Draws the players, and only draws it if they are alive.
      */
     private void drawPlayers(Graphics g, int xOffset, int yOffset) {
         for (Player player : players) {
-            int x = xOffset + player.getCol() * CELL_SIZE;
-            int y = yOffset + player.getRow() * CELL_SIZE;
-
-            g.setColor(player.getColor());
-            g.fillOval(x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10);
+            if (!player.isDead()) {
+                g.setColor(player.getColor());
+                int x = xOffset + player.getCol() * CELL_SIZE;
+                int y = yOffset + player.getRow() * CELL_SIZE;
+                g.fillOval(x, y, CELL_SIZE, CELL_SIZE);
+            }
         }
     }
 
@@ -368,6 +401,7 @@ public class Board extends JPanel implements MouseMotionListener {
                 g.drawRect(x, y, CELL_SIZE, CELL_SIZE);
             }
         }
+
     }
 
     /**
@@ -405,8 +439,7 @@ public class Board extends JPanel implements MouseMotionListener {
             newCol = col;
         }
 
-        if (newCol >= 0 && newCol < COLS &&
-                (newRow == -1 || (newRow >= 0 && newRow < ROWS))) {
+        if (newCol >= 0 && newCol < COLS && (newRow == -1 || (newRow >= 0 && newRow < ROWS))) {
             if (hoverRow != newRow || hoverCol != newCol) {
                 hoverRow = newRow;
                 hoverCol = newCol;
@@ -426,4 +459,167 @@ public class Board extends JPanel implements MouseMotionListener {
         // TODO Auto-generated method stub
 
     }
+
+    private void startCountdownTimer() {
+        countdownTask = new TimerTask() {
+            int count = countdownSeconds;
+
+            public void run() {
+                if (count > 0) {
+                    countdownLabel.setText("Time remaining: " + count + " seconds");
+                    System.out.println(count + " seconds remaining");
+                    count--;
+                } else {
+                    countdownLabel.setText("Time remaining: " + count + " seconds");
+                    System.out.println("Time!");
+                    moveHumanPlayer(); // Move the human player
+                    moveAIPlayers(); // Move all AI players
+                    updateBoard(); // Update the board
+                    resolveCollisions();
+                    // checkForDeadPlayersAndEndGame(players, mainGrid);
+                    count = countdownSeconds; // Restart the countdown
+                    for (Player target : players) {
+                        applySuperpowers(target, mainGrid, players);
+
+                    }
+                    endGame();
+                }
+            }
+
+        };
+        countdownTimer.scheduleAtFixedRate(countdownTask, 0, 1000);
+    }
+
+    private void applySuperpowers(Player player, Cell[][] board, List<Player> players) {
+        if (player.isDead()) {
+            return;
+        }
+
+        int row = player.getRow();
+        int col = player.getCol();
+        Cell cell = board[row][col]; // Get the cell the player landed on
+        player.setHasShield(false);
+
+        if (!cell.hasSuperpower()) {
+            return; // No superpower in this cell
+        }
+
+        int powerDamage = cell.getDamage();
+        int cellType = cell.getCellType();
+
+        switch (cellType) {
+            case 0: // Laser
+                logMessage(player.getPlayerName() + " activated a laser!");
+                for (Player target : players) {
+                    if (target != player && target.getRow() == row) {
+                        target.takeDamage(powerDamage);
+                        logMessage(target.getPlayerName() + " took " + powerDamage + " damage from laser!");
+                    }
+                }
+                break;
+
+            case 1: // Bomb
+                logMessage(player.getPlayerName() + " activated a bomb!");
+                int playerRow = player.getRow();
+                int playerCol = player.getCol();
+                for (Player target : players) {
+                    if (target != player) { // Skip activating player
+                        int targetRow = target.getRow();
+                        int targetCol = target.getCol();
+                        if (Math.abs(targetCol - playerCol) <= 1 && Math.abs(targetRow - playerRow) <= 1) {
+                            target.takeDamage(powerDamage);
+                            logMessage(target.getPlayerName() + " took " + powerDamage + " damage from bomb!");
+                        }
+                    }
+                }
+                break;
+
+            case 2: // Shield
+                logMessage(player.getPlayerName() + " activated a shield!");
+                player.setHasShield(true);
+                break;
+
+            case 3: // Fire
+                logMessage(player.getPlayerName() + " activated fire!");
+                Random rand = new Random();
+                int boardHeightFire = board.length;
+                int boardWidthFire = board[0].length;
+                for (int i = 0; i < 8; i++) {
+                    int fireRow = rand.nextInt(boardHeightFire);
+                    int fireCol = rand.nextInt(boardWidthFire);
+                    logMessage("Fire placed at (" + fireRow + ", " + fireCol + ")");
+                    for (Player target : players) {
+                        if (target != player && target.getRow() == fireRow && target.getCol() == fireCol) {
+                            target.takeDamage(powerDamage);
+                            logMessage(target.getPlayerName() + " took " + powerDamage + " damage from fire!");
+                        }
+                    }
+                }
+                break;
+
+            case 4: // Health Boost
+                logMessage(player.getPlayerName() + " found a health pack and healed!");
+                player.heal(25);
+                break;
+
+            default:
+                logMessage("Unknown superpower detected!");
+                break;
+        }
+    }
+
+    public void resolveCollisions() {
+        Map<String, Player> intendedMoves = new HashMap<>(); // Track target positions
+        Set<Player> playersToReset = new HashSet<>(); // Players that need to stay in place
+
+        // Register intended moves
+        for (Player player : players) {
+            String key = player.getRow() + "," + player.getCol(); // Target position
+
+            if (intendedMoves.containsKey(key)) {
+                // Collision detected
+                playersToReset.add(player);
+                playersToReset.add(intendedMoves.get(key));
+            } else {
+                intendedMoves.put(key, player);
+            }
+        }
+
+        // Reset players if they collided
+        for (Player player : playersToReset) {
+            player.setPosition(player.getPrevRow(), player.getPrevCol());
+        }
+    }
+
+    private void logMessage(String message) {
+        LiveGame.append(message + "\n");
+        LiveGame.setCaretPosition(LiveGame.getDocument().getLength());
+    }
+
+    private void endGame() {
+
+        // check if players are alive and if they are not make them dissapeare
+
+        // check if the humanPlayer is alive, it it is not, end the game
+        if (humanplayer.isDead()) {
+            // stop the game with a game over screen messsage
+            countdownTimer.cancel();
+            JOptionPane.showMessageDialog(this, "Game Over", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+
+        }
+
+        boolean AIplayersDead = true;
+        for (Player player : players) {
+            if (player instanceof IAplayer && !player.isDead()) {
+                AIplayersDead = false;
+                break; // Stop checking if at least one AI player is alive
+            }
+        }
+
+        if (AIplayersDead) {
+            countdownTimer.cancel();
+            JOptionPane.showMessageDialog(this, "You Win!", "You Win!", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
 }

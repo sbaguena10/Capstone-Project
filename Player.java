@@ -6,16 +6,33 @@ public class Player {
     private int totalHealth;
     private int row;
     private int col;
+    private int prevRow;
+    private int prevCol;
+
     private boolean isDead;
-    private int[][] intialPos;
-    private Color color; // color for the player
+    private Color color; // Unique color for the player
+    private boolean hasShield;
+
+    // TODO hacer booleano para escudo
 
     public Player(String playerName, int row, int col, Color color) {
         this.playerName = playerName;
         this.row = row;
         this.col = col;
+        this.prevRow = row;
+        this.prevCol = col;
         this.totalHealth = 100; // Default health
         this.color = color;
+        hasShield = false;
+        isDead = false;
+    }
+
+    public boolean isHasShield() {
+        return hasShield;
+    }
+
+    public void setHasShield(boolean hasShield) {
+        this.hasShield = hasShield;
     }
 
     public String getPlayerName() {
@@ -51,7 +68,8 @@ public class Player {
     }
 
     public boolean isDead() {
-        return totalHealth <= 0;
+        return isDead;
+
     }
 
     public void setDead(boolean isDead) {
@@ -62,18 +80,53 @@ public class Player {
         return totalHealth;
     }
 
+    public int getPrevRow() {
+        return prevRow;
+    }
+
+    public void setPrevRow(int prevRow) {
+        this.prevRow = prevRow;
+    }
+
+    public int getPrevCol() {
+        return prevCol;
+    }
+
+    public void setPrevCol(int prevCol) {
+        this.prevCol = prevCol;
+    }
+
+    public void setPosition(int newRow, int newCol) {
+        this.prevRow = this.row; // Store old position
+        this.prevCol = this.col;
+        this.row = newRow; // Update to new position
+        this.col = newCol;
+    }
+
+    // TODO comprobar si el jugador tiene escudo
     public void takeDamage(int damage) {
-        totalHealth -= damage;
-        if (totalHealth < 0) {
-            totalHealth = 0;
+        if (!isDead) {
+            if (hasShield) {
+                System.out.println(playerName + " player has a shield!");
+                hasShield = false; // Shield is used
+                return; // No damage made
+            } else {
+                totalHealth -= damage;
+            }
+
+            if (totalHealth <= 0) {
+                totalHealth = 0;
+                isDead = true;
+            }
         }
     }
 
     public void heal(int healingAmount) {
-        totalHealth += healingAmount;
-        if (totalHealth > 100) {
-            totalHealth = 100;
+        if (!isDead) {
+            totalHealth += healingAmount;
+            if (totalHealth > 100) {
+                totalHealth = 100;
+            }
         }
     }
-
 }
