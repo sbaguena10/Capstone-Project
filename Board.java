@@ -39,7 +39,9 @@ public class Board extends JPanel implements MouseMotionListener {
     private JLabel countdownLabel;
     private JTextArea LiveGame;
     private HumanPlayer humanplayer;
-    // private BufferedImage sprite;
+    private JButton pauseButton;
+    private JButton resumeButton;
+    private boolean isPaused = false;
 
     /**
      * Constructs a Board object, initializes the grids and the players.
@@ -61,8 +63,24 @@ public class Board extends JPanel implements MouseMotionListener {
         countdownLabel.setHorizontalAlignment(SwingConstants.CENTER);
         this.add(countdownLabel, BorderLayout.NORTH);
 
+        JPanel buttonPanel = new JPanel();
+
+        pauseButton = new JButton("Pause");
+        resumeButton = new JButton("Resume");
+
+        pauseButton.setFont(new Font("Arial", Font.BOLD, 16));
+        resumeButton.setFont(new Font("Arial", Font.BOLD, 16));
+
+        pauseButton.addActionListener(e -> pauseGame());
+        resumeButton.addActionListener(e -> resumeGame());
+
+        buttonPanel.add(pauseButton);
+        buttonPanel.add(resumeButton);
+
+        this.add(buttonPanel, BorderLayout.CENTER);
+
         // Initialize game log
-        LiveGame = new JTextArea(10, 40);
+        LiveGame = new JTextArea(10, 30);
         LiveGame.setEditable(false);
         LiveGame.setLineWrap(true);
         LiveGame.setWrapStyleWord(true);
@@ -594,6 +612,22 @@ public class Board extends JPanel implements MouseMotionListener {
     private void logMessage(String message) {
         LiveGame.append(message + "\n");
         LiveGame.setCaretPosition(LiveGame.getDocument().getLength());
+    }
+
+    private void pauseGame() {
+        if (!isPaused) {
+            countdownTask.cancel();
+            isPaused = true;
+            logMessage("Game paused.");
+        }
+    }
+
+    private void resumeGame() {
+        if (isPaused) {
+            startCountdownTimer();
+            isPaused = false;
+            logMessage("Game resumed.");
+        }
     }
 
     private void endGame() {

@@ -7,7 +7,7 @@ public class Cell {
     private int damage; // value given to each superpower
     private static final Random rand = new Random();
     private static final Color[] superpowers = { Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.PINK };
-    private static final int[] DamageOfSuperpowers = { 25, 50, 0, 35, 0 };
+    private static final int[] DamageOfSuperpowers = { 20, 25, 0, 30, 0 };
     private int cellType;
 
     public Cell() {

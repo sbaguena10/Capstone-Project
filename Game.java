@@ -71,7 +71,7 @@ public class Game {
         });
 
         // Settings button
-        JButton settingsButton = new JButton("Settings");
+        JButton settingsButton = new JButton("Help");
         settingsButton.setFont(new Font("Arial", Font.BOLD, 16));
         settingsButton.setForeground(new Color(50, 50, 50));
         settingsButton.setBackground(new Color(255, 255, 255));
@@ -122,11 +122,14 @@ public class Game {
         String instructions = "Welcome to the Countdown! Here's how it works:\n\n" +
                 "1. Each player starts with full health.\n" +
                 "2. In each round, players will make a move.\n" +
-                "3. There are power-ups that can be used for health boosts, shields, etc.\n" +
+                "3. Power-ups are scattered across the board and activate when a player lands on them:\n" +
+                "   • Laser (Red): Damages all opponents in the same row.\n" +
+                "   • Bomb (Blue): Damages all opponents in adjacent squares.\n" +
+                "   • Shield (Green): Grants protection from the next hit.\n" +
+                "   • Fire (Orange): Randomly places fire on the board which can damage others.\n" +
+                "   • Health Pack (Pink): Heals the player who lands on it.\n" +
                 "4. Players lose health when they take damage.\n" +
-                "5. The game ends when a player loses all their health.\n\n" +
-                "Adjust settings below:\n\n" +
-                "You can configure the difficulty, game speed, and more!";
+                "5. The game ends when the human player dies or all AI opponents are eliminated.";
 
         JOptionPane.showMessageDialog(frame, instructions, "How the Game Works", JOptionPane.INFORMATION_MESSAGE);
     }

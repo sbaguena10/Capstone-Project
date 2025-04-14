@@ -12,16 +12,20 @@ public class IAplayer extends Player {
     }
 
     public void IAmove() {
-        // Random move within -1, 0, or 1 for both row and column
-        int rowOffset = rand.nextInt(3) - 1; // Random move within -1, 0, or 1
-        int colOffset = rand.nextInt(3) - 1; // Random move within -1, 0, or 1
+        int rowOffset = 0;
+        int colOffset = 0;
 
-        // Ensure the move is within the bounds of the board (0 <= row < 6, 0 <= col <
-        // 14)
+        // Player momves horizontally or vertically
+        if (rand.nextBoolean()) {
+            rowOffset = rand.nextInt(7) - 3; // Move between -3 and 3 rows
+        } else {
+            colOffset = rand.nextInt(7) - 3; // Move between -3 and 3 columns
+        }
+
         int newRow = getRow() + rowOffset;
         int newCol = getCol() + colOffset;
 
-        // Check if the new position is within bounds (no check for occupancy)
+        // Ensure the move is within the bounds of the board
         if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 14) {
             setRow(newRow);
             setCol(newCol);
